@@ -1,61 +1,27 @@
-import React,{useState,useEffect} from 'react'
+import { useState } from "react";
 
 export default function Greeting() {
-  const [text,setText]=useState("");
-  const [todos,setTodos]=useState([]);
+  const [message, setMessage] = useState(0);
 
-  // READ todos
-  useEffect(()=>{
-    fetch("http://localhost:5000/todos")
-      .then(res=>res.json())
-      .then(data=>setTodos(data))
-  },[])
+  const increment = async () => {
+    const res = await fetch("http://localhost:5000/count");
+    const data = await res.json();
+    setMessage(data.count);
+  };
 
-  // ADD todo
-  const add=()=>{
-    fetch("http://localhost:5000/add",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({ data:text })
-    })
-    .then(res=>res.json())
-    .then(data=>{
-      if(Array.isArray(data)){
-        setTodos(data)
-        setText("")
-      }else{
-        alert(data.error)
-      }
-    })
-  }
-
-  // ❌ DELETE todo
-  const del = (id) => {
-    fetch(`http://localhost:5000/delete/${id}`,{
-      method:"DELETE"
-    })
-    .then(res=>res.json())
-    .then(data=>setTodos(data))
-  }
+  const decrement = async () => {
+    const res = await fetch("http://localhost:5000/discount");
+    const data = await res.json();
+    setMessage(data.count);
+  };
 
   return (
     <div>
-      <input
-        type="text"
-        value={text}
-        onChange={e=>setText(e.target.value)}
-        placeholder="Enter todo"
-      />
-      <button onClick={add}>Add</button>
+      <h1>Counter App</h1>
+      <h2>{message}</h2>
 
-      <hr />
-
-      {todos.map(todo=>(
-        <div key={todo.id}>
-          <span>{todo.data}</span>
-          <button onClick={()=>del(todo.id)}>❌ Delete</button>
-        </div>
-      ))}
+      <button onClick={increment}>Increment</button>
+      <button onClick={decrement}>Decrement</button>
     </div>
-  )
+  );
 }
