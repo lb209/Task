@@ -1,98 +1,69 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-export default function Greeting() {
-  const [users, setUsers] = useState([]);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [msg, setMsg] = useState("");
+export default function App() {
+  const [board, setBoard] = useState(Array(9).fill(null));
+  const [isXTurn, setIsXTurn] = useState(true);
 
-  // 🔄 Load users
-  const getUsers = async () => {
-    const res = await fetch("http://localhost:5000/users");
-    const data = await res.json();
-    setUsers(data);
-  };
+  const winner = checkWinner(board);
 
-  useEffect(() => {
-    getUsers();
-  }, []);
+  function handleClick(index) {
+    if (board[index] || winner) return;
 
-  // ➕ Add user
-  const addUser = async () => {
-    const res = await fetch("http://localhost:5000/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
-    });
+    const newBoard = [...board];
+    newBoard[index] = isXTurn ? "X" : "O";
+    setBoard(newBoard);
+    setIsXTurn(!isXTurn);
+  }
 
-    const data = await res.json();
-    setMsg(data.msg || "");
-    if (res.ok) {
-      setUsers(data.users);
-      setName("");
-      setEmail("");
-      setPassword("");
-    }
-  };
-
-  // ❌ Delete user
-  const deleteUser = async (id) => {
-    const res = await fetch(`http://localhost:5000/delete/${id}`, {
-      method: "DELETE",
-    });
-    const data = await res.json();
-    setUsers(data.users);
-  };
+  function resetGame() {
+    setBoard(Array(9).fill(null));
+    setIsXTurn(true);
+  }
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial" }}>
-      <h2>User CRUD App</h2>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-600 to-pink-600 text-white">
+      
+      <h1 className="text-4xl font-bold mb-6">Tic Tac Toe</h1>
 
-      <input
-        placeholder="Name"
-        value={name}
-        onChange={e => setName(e.target.value)}
-      /><br /><br />
+      <p className="mb-4 text-lg">
+        {winner
+          ? `Winner: ${winner}`
+          : `Next Player: ${isXTurn ? "X" : "O"}`}
+      </p>
 
-      <input
-        placeholder="Email"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-      /><br /><br />
-
-      <input
-        placeholder="Password"
-        value={password}
-        onChange={e => setPassword(e.target.value)}
-      /><br /><br />
-
-      <button onClick={addUser}>Create User</button>
-
-      <p style={{ color: "red" }}>{msg}</p>
-
-      <hr />
-
-      <h3>All Users</h3>
-
-      {users.map(user => (
-        <div
-          key={user.id}
-          style={{
-            border: "1px solid #ccc",
-            padding: "10px",
-            marginBottom: "5px",
-          }}
-        >
-          <b>{user.name}</b> | {user.email}
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        {board.map((value, i) => (
           <button
-            style={{ marginLeft: "10px", color: "red" }}
-            onClick={() => deleteUser(user.id)}
+            key={i}
+            onClick={() => handleClick(i)}
+            className="w-24 h-24 bg-white text-gray-800 text-3xl font-bold rounded-xl shadow-md hover:bg-gray-200 transition"
           >
-            Delete
+            {value}
           </button>
-        </div>
-      ))}
+        ))}
+      </div>
+
+      <button
+        onClick={resetGame}
+        className="px-6 py-2 bg-red-500 rounded-lg text-white font-semibold hover:bg-red-600 transition"
+      >
+        Restart Game
+      </button>
     </div>
   );
+}
+
+function checkWinner(board) {
+  const lines = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6],
+  ];
+
+  for (let [a, b, c] of lines) {
+    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+      return board[a];
+    }
+  }
+  return null;
 }
